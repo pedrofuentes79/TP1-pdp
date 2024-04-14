@@ -177,7 +177,7 @@ esta_vivo_en_universo str = foldr (\x rec -> if es_un_personaje x && nombre_pers
 
 -- tiene_objeto_en_universo
 tiene_objeto_en_universo :: Universo -> String -> String -> Bool
-tiene_objeto_en_universo u nombreP nombreObj = foldr (\obj rec -> if nombre obj == nombreObj && en_posesión_de nombreP (Right obj) then True else rec) False (objetos_en u )
+tiene_objeto_en_universo u nombreP nombreObj = foldr(\x rec -> if es_un_objeto x && nombre_objeto (objeto_de x) == nombreObj && en_posesión_de nombreP (objeto_de x) then True else rec) False u
 
 -- falta chequeo de "esta vivo" y "esta destruido"
 podemos_ganarle_a_thanos :: Universo -> Bool
