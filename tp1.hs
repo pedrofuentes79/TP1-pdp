@@ -4,7 +4,6 @@ import Test.HUnit
 
 import Data.Either
 import Data.List
-import qualified Data.Type.Bool as o
 
 data Dirección = Norte | Sur | Este | Oeste
   deriving (Eq, Show)
@@ -19,10 +18,10 @@ data Objeto = Objeto Posición String        -- posición inicial, nombre
   | Tomado Objeto Personaje                 -- objeto que es tomado, personaje que lo tomó
   | EsDestruido Objeto                      -- objeto que es destruido
   deriving (Eq, Show)
+
 type Universo = [Either Personaje Objeto]
 
 {-- Observadores y funciones básicas de los tipos --}
-
 siguiente_posición :: Posición -> Dirección -> Posición
 siguiente_posición p Norte = (fst p, snd p + 1)
 siguiente_posición p Sur = (fst p, snd p - 1)
@@ -108,42 +107,38 @@ es_una_gema o = isPrefixOf "Gema de" (nombre_objeto o)
 
 {-Ejercicio 1-}
 
--- recibe f1, f2 y f3; las funciones que se aplican a cada caso de Personaje
--- f1: Personaje -> a -> a
--- f2: a -> Personaje -> Dirección -> a
--- f3: a -> a
-foldPersonaje :: (Personaje -> a -> a) -> (a -> Personaje -> Dirección -> a) -> (a -> a) -> Personaje -> a
+foldPersonaje :: (Posición -> String -> a) -> (a -> Dirección -> a) -> (a -> a) -> Personaje -> a
 foldPersonaje f1 f2 f3 p = case p of
-                  Personaje pos str -> f1 p 
-                  Mueve p' d -> f2 (rec p') p' d
+                  Personaje pos str -> f1 pos str
+                  Mueve p' d -> f2 (rec p') d
                   Muere p' -> f3 (rec p')
                   where rec = foldPersonaje f1 f2 f3
 
-foldObjeto :: (Objeto -> a -> a) -> (a -> Personaje -> a) -> (a -> a) -> Objeto -> a
+foldObjeto :: (Posición -> String -> a) -> (a -> Personaje -> a) -> (a -> a) -> Objeto -> a
 foldObjeto f1 f2 f3 obj = case obj of
-                  Objeto pos str -> f1 obj str
-                  Tomado obj' p -> f2 (rec obj') p
+                  Objeto pos str -> f1 pos str
+                  Tomado obj p -> f2 (rec obj) p 
                   EsDestruido obj' -> f3 (rec obj')
                   where rec = foldObjeto f1 f2 f3
 
 {-Ejercicio 2-}
 
-posición_personaje :: Personaje -> Posición
+-- posición_personaje :: Personaje -> Posición
 
 -- f1 es id porque, si es Personaje, quiero que me devuelva la posición actual
 -- f2 es la funcion que se aplica a Mueve. Quiero que sea siguiente_posicion
 -- f3 es id porque, si es Muere, quiero que me devuelva la posición actual
-posición_personaje = foldPersonaje (\pos str -> pos)
-                                    (\p direccion -> siguiente_posición (posición_personaje p) direccion) 
-                                    (\p -> p)
+-- posición_personaje = foldPersonaje (\pos str -> pos)
+--                                     (\p direccion -> siguiente_posición (posición_personaje p) direccion) 
+--                                     (\p -> p)
 
 
-nombre_objeto :: Objeto -> String
+-- nombre_objeto :: Objeto -> String
 
 -- f1 es id porque, si es Objeto, quiero que me devuelva el nombre actual
-nombre_objeto = foldObjeto (\o str -> str) 
-                          (\obj p -> (\o str -> str) obj)  -- caso objeto tomado
-                          (\r -> (\o str -> str) obj)      --caso objeto destruido
+-- nombre_objeto = foldObjeto (\o str -> str) 
+--                           (\obj p -> (\o str -> str) obj)  -- caso objeto tomado
+--                           (\r -> (\o str -> str) obj)      --caso objeto destruido
 
 -- {-Ejercicio 3-}
 
@@ -153,7 +148,7 @@ objetos_en = foldr (\x rec -> if es_un_objeto x then objeto_de x : rec else rec)
 -- o.. puede ser mas facil para la demo? nose
 --objetosEn [] = []
 --objetosEn (x:xs) = if es_un_objeto x then objeto_de x : objetosEn xs
-                                      else objetosEn xs
+                                      -- else objetosEn xs
                                     
 
 
@@ -162,10 +157,8 @@ personajes_en = foldr (\x rec -> if es_un_personaje x then personaje_de x : rec 
 
 -- {-Ejercicio 4-}
 
-
 objetos_en_posesión_de ::  Personaje -> Universo -> [Objeto]
-objetos_en_posesión_de p = foldr (\x rec -> if es_un_objeto x && en_posesión_de (nombre_personaje p) x then x : rec
-                                                                                                      else rec) []  
+objetos_en_posesión_de p = foldr (\x rec -> if es_un_objeto x && en_posesión_de (nombre_personaje p) x then x : rec else rec) []  
 
 -- {-Ejercicio 5-}
 
@@ -185,57 +178,57 @@ objetos_en_posesión_de p = foldr (\x rec -> if es_un_objeto x && en_posesión_d
 
 {-Tests-}
 
-main :: IO Counts
-main = do runTestTT allTests
+-- main :: IO Counts
+-- main = do runTestTT allTests
 
-allTests = test [ -- Reemplazar los tests de prueba por tests propios
-  "ejercicio1" ~: testsEj1,
-  "ejercicio2" ~: testsEj2,
-  "ejercicio3" ~: testsEj3,
-  "ejercicio4" ~: testsEj4,
-  "ejercicio5" ~: testsEj5,
-  "ejercicio6" ~: testsEj6,
-  "ejercicio7" ~: testsEj7
-  ]
+-- allTests = test [ -- Reemplazar los tests de prueba por tests propios
+--   "ejercicio1" ~: testsEj1,
+--   "ejercicio2" ~: testsEj2,
+--   "ejercicio3" ~: testsEj3,
+--   "ejercicio4" ~: testsEj4,
+--   "ejercicio5" ~: testsEj5,
+--   "ejercicio6" ~: testsEj6,
+--   "ejercicio7" ~: testsEj7
+--   ]
 
-phil = Personaje (0,0) "Phil"
-mjölnir = Objeto (2,2) "Mjölnir"
-universo_sin_thanos = universo_con [phil] [mjölnir]
+-- phil = Personaje (0,0) "Phil"
+-- mjölnir = Objeto (2,2) "Mjölnir"
+-- universo_sin_thanos = universo_con [phil] [mjölnir]
 
-testsEj1 = test [ -- Casos de test para el ejercicio 1
-  foldPersonaje (\p s -> 0) (\r d -> r+1) (\r -> r+1) phil             -- Caso de test 1 - expresión a testear
-    ~=? 0                                                               -- Caso de test 1 - resultado esperado
-  ,
-  foldPersonaje (\p s -> 0) (\r d -> r+1) (\r -> r+1) (Muere phil)     -- Caso de test 2 - expresión a testear
-    ~=? 1                                                               -- Caso de test 2 - resultado esperado
-  ]
+-- testsEj1 = test [ -- Casos de test para el ejercicio 1
+--   foldPersonaje (\p s -> 0) (\r d -> r+1) (\r -> r+1) phil             -- Caso de test 1 - expresión a testear
+--     ~=? 0                                                               -- Caso de test 1 - resultado esperado
+--   ,
+--   foldPersonaje (\p s -> 0) (\r d -> r+1) (\r -> r+1) (Muere phil)     -- Caso de test 2 - expresión a testear
+--     ~=? 1                                                               -- Caso de test 2 - resultado esperado
+--   ]
 
-testsEj2 = test [ -- Casos de test para el ejercicio 2
-  posición_personaje phil       -- Caso de test 1 - expresión a testear
-    ~=? (0,0)                   -- Caso de test 1 - resultado esperado
-  ]
+-- testsEj2 = test [ -- Casos de test para el ejercicio 2
+--   posición_personaje phil       -- Caso de test 1 - expresión a testear
+--     ~=? (0,0)                   -- Caso de test 1 - resultado esperado
+--   ]
 
-testsEj3 = test [ -- Casos de test para el ejercicio 3
-  objetos_en []       -- Caso de test 1 - expresión a testear
-    ~=? []            -- Caso de test 1 - resultado esperado
-  ]
+-- testsEj3 = test [ -- Casos de test para el ejercicio 3
+--   objetos_en []       -- Caso de test 1 - expresión a testear
+--     ~=? []            -- Caso de test 1 - resultado esperado
+--   ]
 
-testsEj4 = test [ -- Casos de test para el ejercicio 4
-  objetos_en_posesión_de "Phil" []       -- Caso de test 1 - expresión a testear
-    ~=? []                             -- Caso de test 1 - resultado esperado
-  ]
+-- testsEj4 = test [ -- Casos de test para el ejercicio 4
+--   objetos_en_posesión_de "Phil" []       -- Caso de test 1 - expresión a testear
+--     ~=? []                             -- Caso de test 1 - resultado esperado
+--   ]
 
-testsEj5 = test [ -- Casos de test para el ejercicio 5
-  objeto_libre_mas_cercano phil [Right mjölnir]       -- Caso de test 1 - expresión a testear
-    ~=? mjölnir                                       -- Caso de test 1 - resultado esperado
-  ]
+-- testsEj5 = test [ -- Casos de test para el ejercicio 5
+--   objeto_libre_mas_cercano phil [Right mjölnir]       -- Caso de test 1 - expresión a testear
+--     ~=? mjölnir                                       -- Caso de test 1 - resultado esperado
+--   ]
 
-testsEj6 = test [ -- Casos de test para el ejercicio 6
-  tiene_thanos_todas_las_gemas universo_sin_thanos       -- Caso de test 1 - expresión a testear
-    ~=? False                                            -- Caso de test 1 - resultado esperado
-  ]
+-- testsEj6 = test [ -- Casos de test para el ejercicio 6
+--   tiene_thanos_todas_las_gemas universo_sin_thanos       -- Caso de test 1 - expresión a testear
+--     ~=? False                                            -- Caso de test 1 - resultado esperado
+--   ]
 
-testsEj7 = test [ -- Casos de test para el ejercicio 7
-  podemos_ganarle_a_thanos universo_sin_thanos         -- Caso de test 1 - expresión a testear
-    ~=? False                                          -- Caso de test 1 - resultado esperado
-  ]
+-- testsEj7 = test [ -- Casos de test para el ejercicio 7
+--   podemos_ganarle_a_thanos universo_sin_thanos         -- Caso de test 1 - expresión a testear
+--     ~=? False                                          -- Caso de test 1 - resultado esperado
+--   ]
