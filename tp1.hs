@@ -128,16 +128,14 @@ foldObjeto f1 f2 f3 obj = case obj of
 -- f3 es id porque, si es Muere, quiero que me devuelva la posición actual
 posición_personaje :: Personaje -> Posición
 posición_personaje = foldPersonaje (\pos _ -> pos)
-                                    (\p direccion -> siguiente_posición p direccion) 
-                                    (\p -> p)
-
-
+                                    (\pers direccion -> siguiente_posición pers direccion) 
+                                    (\pers -> posición pers)
 
 -- f1 es id porque, si es Objeto, quiero que me devuelva el nombre actual
 nombre_objeto :: Objeto -> String
 nombre_objeto = foldObjeto (\_ str -> str)
-                           (\obj _ -> obj)  -- caso objeto tomado
-                          (\obj -> obj)      --caso objeto destruido
+                           (\obj _ -> nombre obj)  -- caso objeto tomado
+                          (\obj -> nombre obj)      --caso objeto destruido
 
 -- {-Ejercicio 3-}
 
@@ -145,9 +143,55 @@ objetos_en :: Universo -> [Objeto]
 objetos_en = foldr (\x rec -> if es_un_objeto x then objeto_de x : rec else rec) []
 
 {- Demostracion
-∀ u :: Universo . ∀ o :: Objeto . elem o (objetos_en u) ⇒ elem (Right o) u
+∀ u :: Universo .∀ o :: Objeto . elem o (objetos_en u) ⇒ elem (Right o) u
 
+Caso base: Como estamos recorriendo una lista, el unico constructor base es u=[]
 
+P([]):
+elem o (objetos_en []) ⇒ elem (Right o) []
+elem o (foldr (\x rec -> if es_un_objeto x then objeto_de x : rec else rec) [] []) ⇒ elem (Right o) []
+elem o [] ⇒ elem (Right o) []
+False => elem (Right o) []
+True
+
+Caso inductivo: ∀ys::[Either Personaje Objeto] P(ys) => ∀y::Either Personaje Objeto P(y:ys)
+La hipotesis inductiva HI es que vale P(ys) : ∀ys::[Either Personaje Objeto]. elem o (objetos_en (ys)) ⇒ elem (Right o) (ys)
+
+Distinguimos dos casos:
+1. `y` es el objeto que estamos buscando.
+2. `y` es un objeto pero no el que estamos buscando.
+3. `y` es un personaje.
+
+1. Caso `y` es el objeto que estamos buscando:
+  elem o (objetos_en (y:ys)) ⇒ elem (Right o) (y:ys)
+          
+  Right o == y || elem o (objetos_en (ys)) ⇒ elem (Right o) (y:ys)    -- VALIDAR ESTO!!!!!!!!
+  True => elem (Right o) (y:ys)
+  elem (Right o) (y:ys)
+  Right o == y || elem (Right o) (ys)
+  True
+
+2. Caso `y` es un objeto pero no el que estamos buscando:
+  elem o (objetos_en (y:ys)) ⇒ elem (Right o) (y:ys) 
+
+  Vale que objetos_en (y:ys) = y : objetos_en ys, porque ...
+  ...
+
+  Entonces:
+  elem o (objetos_en ys) ⇒ elem (Right o) (y:ys)
+
+  Suponemos que vale elem o (objetos_en ys), sino es trivial.
+  Nos queda ver que valga 
+
+  elem (Right o) (y:ys) 
+  Right o == y || elem (Right o) (ys)      -- pero sabemos que Right o != y
+  elem (Right o) (ys)                      -- esto vale por HI: elem o (objetos_en (ys)) ⇒ elem (Right o) (ys)
+
+3. Caso `y` es un personaje:
+  elem o (objetos_en (y:ys)) ⇒ elem (Right o) (y:ys) 
+  elem o (objetos_en ys) ⇒ elem (Right o) (y:ys)
+
+  Suponeoms 
 -}
                                     
 personajes_en :: Universo -> [Personaje]
@@ -156,13 +200,13 @@ personajes_en = foldr (\x rec -> if es_un_personaje x then personaje_de x : rec 
 -- {-Ejercicio 4-}
 
 objetos_en_posesión_de ::  Personaje -> Universo -> [Objeto]
-objetos_en_posesión_de p = foldr (\x rec -> if es_un_objeto x && en_posesión_de (nombre_personaje p) (objeto_de x) then (objeto_de x) : rec else rec) []  
+objetos_en_posesión_de p = foldr (\x rec -> if (es_un_objeto x && en_posesión_de (nombre_personaje p) (objeto_de x)) then (objeto_de x) : rec else rec) []  
 
 -- {-Ejercicio 5-}
 
 -- -- Asume que hay al menos un objeto
 objeto_libre_mas_cercano :: Personaje -> Universo -> Objeto
-objeto_libre_mas_cercano p u = foldr1 (\obj rec -> if (distancia (Left p) (Right obj)) < (distancia (Left p) (Right rec)) then obj else rec) (objetos_en u )
+objeto_libre_mas_cercano p u = foldr1 (\obj rec -> if (objeto_libre obj && (distancia (Left p) (Right obj) < distancia (Left p) (Right rec))) then obj else rec) (objetos_en u)
 
 -- {-Ejercicio 6-}
 -- Devuelve true si tiene 6 o mas
@@ -182,8 +226,8 @@ tiene_objeto_en_universo u nombreP nombreObj = foldr(\x rec -> if es_un_objeto x
 -- falta chequeo de "esta vivo" y "esta destruido"
 podemos_ganarle_a_thanos :: Universo -> Bool
 podemos_ganarle_a_thanos u = not (tiene_thanos_todas_las_gemas u)
-                          && ((está_el_personaje "Thor" u && está_el_objeto "Stormbreaker" u)
-                              || (está_el_personaje "Wanda" u && está_el_personaje "Visión" u && tiene_objeto_en_universo u "Visión" "Gema de la Mente")
+                          && ((esta_vivo_en_universo "Thor" u && está_el_objeto "Stormbreaker" u)
+                              || (esta_vivo_en_universo "Wanda" u && esta_vivo_en_universo "Visión" u && tiene_objeto_en_universo u "Visión" "Gema de la Mente")
                               )
 
 {-Tests-}
