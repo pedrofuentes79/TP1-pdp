@@ -142,56 +142,88 @@ nombre_objeto = foldObjeto (\_ str -> str)
 objetos_en :: Universo -> [Objeto]
 objetos_en = foldr (\x rec -> if es_un_objeto x then objeto_de x : rec else rec) []
 
-{- Demostracion
-∀ u :: Universo .∀ o :: Objeto . elem o (objetos_en u) ⇒ elem (Right o) u
+{- 
 
-Caso base: Como estamos recorriendo una lista, el unico constructor base es u=[]
+Demostracion
+∀ u :: Universo. ∀ o :: Objeto. elem o (objetos_en u) ⇒ elem (Right o) u
 
-P([]):
-elem o (objetos_en []) ⇒ elem (Right o) []
-elem o (foldr (\x rec -> if es_un_objeto x then objeto_de x : rec else rec) [] []) ⇒ elem (Right o) []
-elem o [] ⇒ elem (Right o) []
-False => elem (Right o) []
-True
+Caso base:
+  Como estamos recorriendo una lista, el unico constructor base es u=[].
+  Tenemos que ver que vale P([])...
 
-Caso inductivo: ∀ys::[Either Personaje Objeto] P(ys) => ∀y::Either Personaje Objeto P(y:ys)
-La hipotesis inductiva HI es que vale P(ys) : ∀ys::[Either Personaje Objeto]. elem o (objetos_en (ys)) ⇒ elem (Right o) (ys)
+  P([]) 
+  elem o (objetos_en []) ⇒ elem (Right o) []                                                            -- por definicion de P
+  elem o (foldr (\x rec -> if es_un_objeto x then objeto_de x : rec else rec) [] []) ⇒ elem (Right o) [] -- por definicion de objetos_en
+  elem o [] ⇒ elem (Right o) [] -- es el caso base dentro del foldr, entonces devuelve []
+  False => elem (Right o) []    -- por definicion de elem, caso base
+  True                          -- por definicion de implicacion (False -> _) = True
 
-Distinguimos dos casos:
-1. `y` es el objeto que estamos buscando.
-2. `y` es un objeto pero no el que estamos buscando.
-3. `y` es un personaje.
+  Entonces vale para el caso base.
 
-1. Caso `y` es el objeto que estamos buscando:
-  elem o (objetos_en (y:ys)) ⇒ elem (Right o) (y:ys)
-          
-  Right o == y || elem o (objetos_en (ys)) ⇒ elem (Right o) (y:ys)    -- VALIDAR ESTO!!!!!!!!
-  True => elem (Right o) (y:ys)
-  elem (Right o) (y:ys)
-  Right o == y || elem (Right o) (ys)
-  True
+Caso inductivo: 
+  Queremos demostrar que ∀ys::[Either Personaje Objeto] P(ys) => ∀y::Either Personaje Objeto P(y:ys)
+  Usamos como Hipotesis inductiva que vale P(ys).
 
-2. Caso `y` es un objeto pero no el que estamos buscando:
-  elem o (objetos_en (y:ys)) ⇒ elem (Right o) (y:ys) 
+  HI:
+    P(ys) = ∀ys::[Either Personaje Objeto] elem o (objetos_en (ys)) ⇒ elem (Right o) (ys) 
 
-  Vale que objetos_en (y:ys) = y : objetos_en ys, porque ...
-  ...
+  Q.V.Q:
+    P((y:ys)) = 
+    ∀ys::[Either Personaje Objeto]. elem o (objetos_en (y:ys)) ⇒ ∀y::Either Personaje Objeto. elem (Right o) (y:ys) 
+    elem o (objetos_en (y:ys)) ⇒ ∀y::Either Personaje Objeto. elem (Right o) (y:ys)                                 -- en forma simplificada
+    elem o (foldr (\x rec -> if es_un_objeto x then objeto_de x : rec else rec) [] (y:ys)) ⇒ elem (Right o) (y:ys)  -- por definicion de objetos_en
 
-  Entonces:
-  elem o (objetos_en ys) ⇒ elem (Right o) (y:ys)
+  Para demostrar el caso inductivo, distinguimos dos casos ya que `y :: Either Personaje Objeto`.
+  1. `y` de tipo Right objeto.
+  2. `y` de tipo Left personaje.
 
-  Suponemos que vale elem o (objetos_en ys), sino es trivial.
-  Nos queda ver que valga 
+  1. Caso `y` es objeto:
+    Sea 
+    f = (\x rec -> if es_un_objeto x then objeto_de x : rec else rec)  
 
-  elem (Right o) (y:ys) 
-  Right o == y || elem (Right o) (ys)      -- pero sabemos que Right o != y
-  elem (Right o) (ys)                      -- esto vale por HI: elem o (objetos_en (ys)) ⇒ elem (Right o) (ys)
+    elem o (foldr (\x rec -> if es_un_objeto x then objeto_de x : rec else rec) [] (y:ys)) ⇒ elem (Right o) (y:ys)  
+    elem o (f y (foldr f [] ys)) ⇒ elem (Right o) (y:ys)                    -- por definicion del caso recursivo de foldr
+    elem o (objeto_de y : objetos_en ys) ⇒ elem (Right o) (y:ys)            -- aplicando la funcion f
+    objeto_de y == o || elem o (objetos_en (ys)) ⇒ elem (Right o) (y:ys)    -- por definicion de elem `elem n (x:xs) = n==x || elem n xs`
+    
+    Aca pueden pasar dos subcasos: 
+      a. Caso `objeto_de y == o`:      
+        objeto_de y == o || elem o (objetos_en (ys)) ⇒ elem (Right o) (y:ys)
+        True || elem o (objetos_en (ys)) ⇒ elem (Right o) (y:ys)            -- por hipotesis del caso
+        True => elem (Right o) (y:ys)                                       
+        elem (Right o) (y:ys)
+        Right o == y || elem (Right o) ys       -- por definicion de elem
+        True || elem (Right o) ys               -- por la hipotesis inductiva
+        True
 
-3. Caso `y` es un personaje:
-  elem o (objetos_en (y:ys)) ⇒ elem (Right o) (y:ys) 
-  elem o (objetos_en ys) ⇒ elem (Right o) (y:ys)
+        Entonces vale la implicacion para este caso.
 
-  Suponeoms 
+      b. Caso (objeto_de y != o):
+        objeto_de y == o || elem o (objetos_en (ys)) ⇒ elem (Right o) (y:ys)
+        False || elem o (objetos_en (ys)) ⇒ elem (Right o) (y:ys)   -- por hipotesis del caso (objeto_de y != o)
+        elem o (objetos_en (ys)) ⇒ elem (Right o) (y:ys)            -- (Falso || Algo) == Algo 
+        elem o (objetos_en (ys)) => o == y || elem (Right o) ys     -- por definicion de elem
+        elem o (objetos_en (ys)) => False || elem (Right o) ys      -- por hipotesis
+        elem o (objetos_en (ys)) => elem (Right o) ys               -- es la hipotesis inductiva
+        True
+
+        Entonces vale la implicacion para este caso.
+
+    Como vale para ambos subcasos, entonces vale para el caso 1.
+
+  2. Caso `y` es un personaje:
+    elem o (objetos_en (y:ys)) ⇒ elem (Right o) (y:ys) 
+    elem o (foldr f [] (y:ys)) ⇒ elem (Right o) (y:ys)
+    elem o (f y (foldr f [] ys)) ⇒ elem (Right o) (y:ys)
+    elem o (foldr f [] ys) ⇒ elem (Right o) (y:ys)                 -- por hipotesis, y es Left Personaje, entonces entra en el else de f
+    elem o (objetos_en ys) => elem (Right o) (y:ys)                -- por definicion de objetos_en
+    elem o (objetos_en ys) => (Right o) == y || elem (Right o) ys  -- por definicion de elem
+    elem o (objetos_en ys) => False || elem (Right o) ys           -- por hipotesis y es personaje, entonces no es igual a o
+    elem o (objetos_en ys) => elem (Right o) ys                    -- es la hipotesis inductiva
+
+    Entonces vale para el caso 2.
+
+Luego, como vale para todos los casos inductivos posibles y para el caso base, entonces vale para todos los casos.
 -}
                                     
 personajes_en :: Universo -> [Personaje]
