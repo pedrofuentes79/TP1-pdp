@@ -264,7 +264,20 @@ podemos_ganarle_a_thanos u = not (tiene_thanos_todas_las_gemas u)
 
 -- Sample Personajes and Objetos for testing
 thor = Personaje (0, 0) "Thor"
-mjölnir = Objeto (2, 2) "Mjölnir"
+mjolnir = Objeto (2, 2) "Mjolnir"
+stormbreaker = Objeto (3, 3) "Stormbreaker"
+thanos = Personaje (4, 4) "Thanos"
+
+--gemas
+gemaMente = Objeto (5, 5) "Gema de la Mente"
+gemaRealidad = Objeto (6, 6) "Gema de la Realidad"
+gemaEspacio = Objeto (7, 7) "Gema del Espacio"
+gemaPoder = Objeto (8, 8) "Gema del Poder"
+gemaAlma = Objeto (9, 9) "Gema del Alma"
+gemaTiempo = Objeto (10, 10) "Gema del Tiempo"
+
+
+universo_thanos_gana = [Right (Tomado gemaMente thanos), Right (Tomado gemaRealidad thanos), Right (Tomado gemaEspacio thanos), Right (Tomado gemaPoder thanos), Right (Tomado gemaAlma thanos,) Right (Tomado gemaTiempo thanos), Left thanos]
 
 -- Test cases for foldPersonaje
 testsFoldPersonaje = [
@@ -275,9 +288,9 @@ testsFoldPersonaje = [
 
 -- Test cases for foldObjeto
 testsFoldObjeto = [
-  "foldObjeto test1" ~: foldObjeto (\p s -> (0, 0)) (\r p -> posición_personaje p) (\r -> (1, 1)) mjölnir ~?= (2, 2),
-  "foldObjeto test2" ~: foldObjeto (\p s -> s) (\r p -> nombre_personaje p) (\r -> "Objeto destruido") mjölnir ~?= "Mjölnir",
-  "foldObjeto test3" ~: foldObjeto (\p s -> p) (\r p -> p) (\r -> p) (Tomado mjölnir thor) ~?= thor
+  "foldObjeto test1" ~: foldObjeto (\p s -> (0, 0)) (\r p -> posición_personaje p) (\r -> (1, 1)) mjolnir ~?= (2, 2),
+  "foldObjeto test2" ~: foldObjeto (\p s -> s) (\r p -> nombre_personaje p) (\r -> "Objeto destruido") mjolnir ~?= "Mjolnir",
+  "foldObjeto test3" ~: foldObjeto (\p s -> p) (\r p -> p) (\r -> p) (Tomado mjolnir thor) ~?= thor
   ]
 
 -- Test cases for posición_personaje
@@ -288,37 +301,41 @@ testsPosiciónPersonaje = [
 
 -- Test cases for nombre_objeto
 testsNombreObjeto = [
-  "nombre_objeto test1" ~: nombre_objeto mjölnir ~?= "Mjölnir",
-  "nombre_objeto test2" ~: nombre_objeto (Tomado mjölnir thor) ~?= "Mjölnir",
-  "nombre_objeto test3" ~: nombre_objeto (EsDestruido mjölnir) ~?= "Mjölnir"
+  "nombre_objeto test1" ~: nombre_objeto mjolnir ~?= "Mjolnir",
+  "nombre_objeto test2" ~: nombre_objeto (Tomado mjolnir thor) ~?= "Mjolnir",
+  "nombre_objeto test3" ~: nombre_objeto (EsDestruido mjolnir) ~?= "Mjolnir"
   ]
 
 -- Test cases for objetos_en
 testsObjetosEn = [
-  "objetos_en test1" ~: objetos_en [Right mjölnir, Left thor] ~?= [mjölnir],
-  "objetos_en test2" ~: objetos_en [Left thor, Right mjölnir, Left thor, Right mjölnir] ~?= [mjölnir, mjölnir]
+  "objetos_en test1" ~: objetos_en [Right mjolnir, Left thor] ~?= [mjolnir],
+  "objetos_en test2" ~: objetos_en [Left thor, Right mjolnir, Left thor, Right stormbreaker] ~?= [mjolnir, stormbreaker]
   ]
 
 -- Test cases for objetos_en_posesión_de
 testsObjetosEnPosesiónDe = [
-  "objetos_en_posesión_de test1" ~: objetos_en_posesión_de thor [Right mjölnir, Right mjölnir] ~?= [mjölnir, mjölnir]
+  "objetos_en_posesión_de test1" ~: objetos_en_posesión_de thor [Right(Tomado mjolnir thor), Right (Tomado stormbreaker thor)] ~?= [mjolnir, stormbreaker]
+  "objetos_en_posesión_de test2" ~: objetos_en_posesión_de thor [Right mjolnir, Right mjolnir, Right stormbreaker] ~?= []
   ]
 
 -- Test cases for objeto_libre_mas_cercano
 testsObjetoLibreMasCercano = [
-  "objeto_libre_mas_cercano test1" ~: objeto_libre_mas_cercano thor [Right mjölnir, Right mjölnir] ~?= mjölnir
+  "objeto_libre_mas_cercano test1" ~: objeto_libre_mas_cercano thor [Right (Tomado thanos mjolnir), Right stormbreaker] ~?= mjolnir
+  "objeto_libre_mas_cercano test2" ~: objeto_libre_mas_cercano thor [Right mjolnir, Right stormbreaker] ~?= mjolnir
   ]
 
 -- Test cases for tiene_thanos_todas_las_gemas
 testsTieneThanosTodasLasGemas = [
-  "tiene_thanos_todas_las_gemas test1" ~: tiene_thanos_todas_las_gemas [Right mjölnir, Right mjölnir] ~?= False,
-  "tiene_thanos_todas_las_gemas test2" ~: tiene_thanos_todas_las_gemas [Right gemaMente, Right gemaRealidad, Right gemaEspacio, Right gemaPoder, Right gemaAlma, Right gemaTiempo] ~?= True
+  "tiene_thanos_todas_las_gemas test1" ~: tiene_thanos_todas_las_gemas [Right mjolnir, Right mjolnir] ~?= False,
+  "tiene_thanos_todas_las_gemas test2" ~: tiene_thanos_todas_las_gemas [Right gemaMente, Right gemaRealidad, Right gemaEspacio, Right gemaPoder, Right gemaAlma, Right gemaTiempo, Left thanos] ~?= False
+  "tiene_thanos_todas_las_gemas test2" ~: tiene_thanos_todas_las_gemas universo_thanos_gana ~?= True
   ]
 
 -- Test cases for podemos_ganarle_a_thanos
 testsPodemosGanarleAThanos = [
-  "podemos_ganarle_a_thanos test1" ~: podemos_ganarle_a_thanos [Left thor, Right mjölnir] ~?= True,
+  "podemos_ganarle_a_thanos test1" ~: podemos_ganarle_a_thanos [Left thor, Right Stormbreaker] ~?= True,
   "podemos_ganarle_a_thanos test2" ~: podemos_ganarle_a_thanos [Left thor] ~?= False
+  "podemos_ganarle_a_thanos test3" ~: podemos_ganarle_a_thanos Left thor : Right stormbreaker :(tail universo_thanos_gana) ~?= True
   ]
 
 -- Combine all tests
@@ -339,58 +356,4 @@ import Test.HUnit (Counts)
 
 main :: IO Counts
 main = do runTestTT allTests
-
--- main :: IO Counts
--- main = do runTestTT allTests
-
--- allTests = test [ -- Reemplazar los tests de prueba por tests propios
---   "ejercicio1" ~: testsEj1,
---   "ejercicio2" ~: testsEj2,
---   "ejercicio3" ~: testsEj3,
---   "ejercicio4" ~: testsEj4,
---   "ejercicio5" ~: testsEj5,
---   "ejercicio6" ~: testsEj6,
---   "ejercicio7" ~: testsEj7
---   ]
-
--- phil = Personaje (0,0) "Phil"
--- mjölnir = Objeto (2,2) "Mjölnir"
--- universo_sin_thanos = universo_con [phil] [mjölnir]
-
--- testsEj1 = test [ -- Casos de test para el ejercicio 1
---   foldPersonaje (\p s -> 0) (\r d -> r+1) (\r -> r+1) phil             -- Caso de test 1 - expresión a testear
---     ~=? 0                                                               -- Caso de test 1 - resultado esperado
---   ,
---   foldPersonaje (\p s -> 0) (\r d -> r+1) (\r -> r+1) (Muere phil)     -- Caso de test 2 - expresión a testear
---     ~=? 1                                                               -- Caso de test 2 - resultado esperado
---   ]
-
--- testsEj2 = test [ -- Casos de test para el ejercicio 2
---   posición_personaje phil       -- Caso de test 1 - expresión a testear
---     ~=? (0,0)                   -- Caso de test 1 - resultado esperado
---   ]
-
--- testsEj3 = test [ -- Casos de test para el ejercicio 3
---   objetos_en []       -- Caso de test 1 - expresión a testear
---     ~=? []            -- Caso de test 1 - resultado esperado
---   ]
-
--- testsEj4 = test [ -- Casos de test para el ejercicio 4
---   objetos_en_posesión_de "Phil" []       -- Caso de test 1 - expresión a testear
---     ~=? []                             -- Caso de test 1 - resultado esperado
---   ]
-
--- testsEj5 = test [ -- Casos de test para el ejercicio 5
---   objeto_libre_mas_cercano phil [Right mjölnir]       -- Caso de test 1 - expresión a testear
---     ~=? mjölnir                                       -- Caso de test 1 - resultado esperado
---   ]
-
--- testsEj6 = test [ -- Casos de test para el ejercicio 6
---   tiene_thanos_todas_las_gemas universo_sin_thanos       -- Caso de test 1 - expresión a testear
---     ~=? False                                            -- Caso de test 1 - resultado esperado
---   ]
-
--- testsEj7 = test [ -- Casos de test para el ejercicio 7
---   podemos_ganarle_a_thanos universo_sin_thanos         -- Caso de test 1 - expresión a testear
---     ~=? False                                          -- Caso de test 1 - resultado esperado
---   ]
+-- n = do runTestTT allTests
