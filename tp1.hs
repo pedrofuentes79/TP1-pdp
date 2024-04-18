@@ -253,7 +253,6 @@ esta_vivo_en_universo str = foldr (\x rec -> if es_un_personaje x && nombre_pers
 tiene_objeto_en_universo :: Universo -> String -> String -> Bool
 tiene_objeto_en_universo u nombreP nombreObj = foldr(\x rec -> if es_un_objeto x && nombre_objeto (objeto_de x) == nombreObj && en_posesión_de nombreP (objeto_de x) then True else rec) False u
 
--- falta chequeo de "esta vivo" y "esta destruido"
 podemos_ganarle_a_thanos :: Universo -> Bool
 podemos_ganarle_a_thanos u = not (tiene_thanos_todas_las_gemas u)
                           && ((esta_vivo_en_universo "Thor" u && está_el_objeto "Stormbreaker" u)
@@ -267,6 +266,8 @@ thor = Personaje (0, 0) "Thor"
 mjolnir = Objeto (2, 2) "Mjolnir"
 stormbreaker = Objeto (3, 3) "Stormbreaker"
 thanos = Personaje (4, 4) "Thanos"
+wanda = Personaje (5, 5) "Wanda"
+vision = Personaje (6, 6) "Visión"
 
 --gemas
 gemaMente = Objeto (5, 5) "Gema de la Mente"
@@ -278,6 +279,8 @@ gemaTiempo = Objeto (10, 10) "Gema del Tiempo"
 
 
 universo_thanos_gana = [Right (Tomado gemaMente thanos), Right (Tomado gemaRealidad thanos), Right (Tomado gemaEspacio thanos), Right (Tomado gemaPoder thanos), Right (Tomado gemaAlma thanos,) Right (Tomado gemaTiempo thanos), Left thanos]
+
+universo_vision = universo_con [vision, wanda, thanos, thor] [Tomado gemaMente vision]
 
 -- Test cases for foldPersonaje
 testsFoldPersonaje = [
@@ -305,6 +308,20 @@ testsNombreObjeto = [
   "nombre_objeto test2" ~: nombre_objeto (Tomado mjolnir thor) ~?= "Mjolnir",
   "nombre_objeto test3" ~: nombre_objeto (EsDestruido mjolnir) ~?= "Mjolnir"
   ]
+
+-- Test cases for nombre_personaje
+testNombrePersonaje = [
+  "nombre_personaje test1" ~: nombre_personaje thor ~?= "Thor",
+  "nombre_personaje test2" ~: nombre_personaje (Mueve thor Este) ~?= "Thor",
+  "nombre_personaje test3" ~: nombre_personaje (Muere thor) ~?= "Thor"
+  ]
+
+-- Test cases for personajes_en
+testsPersonajesEn = [
+  "personajes_en test1" ~: personajes_en (universo_con [thanos,thor,wanda] [mjolnir, gemaAlma]) ~?= [thor, thanos, wanda],
+  "personajes_en test2" ~: personajes_en (universo_con [] [gemaAlma, gemaRealidad]) ~?= []
+  ]
+
 
 -- Test cases for objetos_en
 testsObjetosEn = [
@@ -336,6 +353,9 @@ testsPodemosGanarleAThanos = [
   "podemos_ganarle_a_thanos test1" ~: podemos_ganarle_a_thanos [Left thor, Right Stormbreaker] ~?= True,
   "podemos_ganarle_a_thanos test2" ~: podemos_ganarle_a_thanos [Left thor] ~?= False
   "podemos_ganarle_a_thanos test3" ~: podemos_ganarle_a_thanos Left thor : Right stormbreaker :(tail universo_thanos_gana) ~?= True
+  "podemos_ganarle_a_thanos test4" ~: podemos_ganarle_a_thanos universo_thanos_gana ~?= False
+  "podemos_ganarle_a_thanos test5" ~: podemos_ganarle_a_thanos [Left thor, Right stormbreaker, Left wanda, Left vision, Right gemaMente] ~?= True
+  "podemos_ganarle_a_thanos test6" ~: podemos_ganarle_a_thanos universo_vision ~?= True
   ]
 
 -- Combine all tests
@@ -343,7 +363,9 @@ allTests = "allTests" ~: test [
   "foldPersonaje" ~: testsFoldPersonaje,
   "foldObjeto" ~: testsFoldObjeto,
   "posición_personaje" ~: testsPosiciónPersonaje,
+  "nombre_personaje" ~: testNombrePersonaje,
   "nombre_objeto" ~: testsNombreObjeto,
+  "personajes_en" ~: testsPersonajesEn,
   "objetos_en" ~: testsObjetosEn,
   "objetos_en_posesión_de" ~: testsObjetosEnPosesiónDe,
   "objeto_libre_mas_cercano" ~: testsObjetoLibreMasCercano,
