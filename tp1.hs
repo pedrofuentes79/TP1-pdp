@@ -1,4 +1,4 @@
---import Test.HUnit
+import Test.HUnit
 {-- Tipos --}
 import Data.List
 
@@ -127,13 +127,13 @@ foldObjeto f1 f2 f3 obj = case obj of
 posición_personaje :: Personaje -> Posición
 posición_personaje = foldPersonaje (\pos _ -> pos)
                                     (\pers direccion -> siguiente_posición pers direccion) 
-                                    (\pers -> posición pers)
+                                    (\pers -> posición (Left pers))
 
 -- f1 es id porque, si es Objeto, quiero que me devuelva el nombre actual
 nombre_objeto :: Objeto -> String
 nombre_objeto = foldObjeto (\_ str -> str)
-                           (\obj _ -> nombre obj)  -- caso objeto tomado
-                          (\obj -> nombre obj)      --caso objeto destruido
+                           (\obj _ -> nombre (Right obj))  -- caso objeto tomado
+                          (\obj -> nombre (Right obj))      --caso objeto destruido
 
 -- {-Ejercicio 3-}
 
@@ -278,7 +278,7 @@ gemaAlma = Objeto (9, 9) "Gema del Alma"
 gemaTiempo = Objeto (10, 10) "Gema del Tiempo"
 
 
-universo_thanos_gana = [Right (Tomado gemaMente thanos), Right (Tomado gemaRealidad thanos), Right (Tomado gemaEspacio thanos), Right (Tomado gemaPoder thanos), Right (Tomado gemaAlma thanos,) Right (Tomado gemaTiempo thanos), Left thanos]
+universo_thanos_gana = [Right (Tomado gemaMente thanos), Right (Tomado gemaRealidad thanos), Right (Tomado gemaEspacio thanos), Right (Tomado gemaPoder thanos), Right (Tomado gemaPoder thanos), Right (Tomado gemaTiempo thanos), Left thanos]
 
 universo_vision = universo_con [vision, wanda, thanos, thor] [Tomado gemaMente vision]
 
@@ -293,7 +293,7 @@ testsFoldPersonaje = [
 testsFoldObjeto = [
   "foldObjeto test1" ~: foldObjeto (\p s -> (0, 0)) (\r p -> posición_personaje p) (\r -> (1, 1)) mjolnir ~?= (2, 2),
   "foldObjeto test2" ~: foldObjeto (\p s -> s) (\r p -> nombre_personaje p) (\r -> "Objeto destruido") mjolnir ~?= "Mjolnir",
-  "foldObjeto test3" ~: foldObjeto (\p s -> p) (\r p -> p) (\r -> p) (Tomado mjolnir thor) ~?= thor
+  "foldObjeto test3" ~: foldObjeto (\p s -> p) (\r p -> r) (\r -> r) (Tomado mjolnir thor) ~?= (2,2)
   ]
 
 -- Test cases for posición_personaje
@@ -331,30 +331,30 @@ testsObjetosEn = [
 
 -- Test cases for objetos_en_posesión_de
 testsObjetosEnPosesiónDe = [
-  "objetos_en_posesión_de test1" ~: objetos_en_posesión_de thor [Right(Tomado mjolnir thor), Right (Tomado stormbreaker thor)] ~?= [mjolnir, stormbreaker]
+  "objetos_en_posesión_de test1" ~: objetos_en_posesión_de thor [Right(Tomado mjolnir thor), Right (Tomado stormbreaker thor)] ~?= [mjolnir, stormbreaker],
   "objetos_en_posesión_de test2" ~: objetos_en_posesión_de thor [Right mjolnir, Right mjolnir, Right stormbreaker] ~?= []
   ]
 
 -- Test cases for objeto_libre_mas_cercano
 testsObjetoLibreMasCercano = [
-  "objeto_libre_mas_cercano test1" ~: objeto_libre_mas_cercano thor [Right (Tomado thanos mjolnir), Right stormbreaker] ~?= mjolnir
+  "objeto_libre_mas_cercano test1" ~: objeto_libre_mas_cercano thor [Right (Tomado mjolnir thanos), Right stormbreaker] ~?= mjolnir,
   "objeto_libre_mas_cercano test2" ~: objeto_libre_mas_cercano thor [Right mjolnir, Right stormbreaker] ~?= mjolnir
   ]
 
 -- Test cases for tiene_thanos_todas_las_gemas
 testsTieneThanosTodasLasGemas = [
   "tiene_thanos_todas_las_gemas test1" ~: tiene_thanos_todas_las_gemas [Right mjolnir, Right mjolnir] ~?= False,
-  "tiene_thanos_todas_las_gemas test2" ~: tiene_thanos_todas_las_gemas [Right gemaMente, Right gemaRealidad, Right gemaEspacio, Right gemaPoder, Right gemaAlma, Right gemaTiempo, Left thanos] ~?= False
+  "tiene_thanos_todas_las_gemas test2" ~: tiene_thanos_todas_las_gemas [Right gemaMente, Right gemaRealidad, Right gemaEspacio, Right gemaPoder, Right gemaAlma, Right gemaTiempo, Left thanos] ~?= False,
   "tiene_thanos_todas_las_gemas test2" ~: tiene_thanos_todas_las_gemas universo_thanos_gana ~?= True
   ]
 
 -- Test cases for podemos_ganarle_a_thanos
 testsPodemosGanarleAThanos = [
-  "podemos_ganarle_a_thanos test1" ~: podemos_ganarle_a_thanos [Left thor, Right Stormbreaker] ~?= True,
-  "podemos_ganarle_a_thanos test2" ~: podemos_ganarle_a_thanos [Left thor] ~?= False
-  "podemos_ganarle_a_thanos test3" ~: podemos_ganarle_a_thanos Left thor : Right stormbreaker :(tail universo_thanos_gana) ~?= True
-  "podemos_ganarle_a_thanos test4" ~: podemos_ganarle_a_thanos universo_thanos_gana ~?= False
-  "podemos_ganarle_a_thanos test5" ~: podemos_ganarle_a_thanos [Left thor, Right stormbreaker, Left wanda, Left vision, Right gemaMente] ~?= True
+  "podemos_ganarle_a_thanos test1" ~: podemos_ganarle_a_thanos [Left thor, Right stormbreaker] ~?= True,
+  "podemos_ganarle_a_thanos test2" ~: podemos_ganarle_a_thanos [Left thor] ~?= False,
+  "podemos_ganarle_a_thanos test3" ~: podemos_ganarle_a_thanos (Left thor : Right stormbreaker :(tail universo_thanos_gana)) ~?= True,
+  "podemos_ganarle_a_thanos test4" ~: podemos_ganarle_a_thanos universo_thanos_gana ~?= False,
+  "podemos_ganarle_a_thanos test5" ~: podemos_ganarle_a_thanos [Left thor, Right stormbreaker, Left wanda, Left vision, Right gemaMente] ~?= True,
   "podemos_ganarle_a_thanos test6" ~: podemos_ganarle_a_thanos universo_vision ~?= True
   ]
 
@@ -374,7 +374,6 @@ allTests = "allTests" ~: test [
   ]
 
 -- Run the tests
-import Test.HUnit (Counts)
 
 main :: IO Counts
 main = do runTestTT allTests
