@@ -337,7 +337,7 @@ testsObjetosEnPosesiónDe = [
 
 -- Test cases for objeto_libre_mas_cercano
 testsObjetoLibreMasCercano = [
-  "objeto_libre_mas_cercano test1" ~: objeto_libre_mas_cercano thor [Right (Tomado mjolnir thanos), Right stormbreaker] ~?= mjolnir,
+  "objeto_libre_mas_cercano test1" ~: objeto_libre_mas_cercano thor [Right (Tomado mjolnir thanos), Right stormbreaker] ~?= stormbreaker,
   "objeto_libre_mas_cercano test2" ~: objeto_libre_mas_cercano thor [Right mjolnir, Right stormbreaker] ~?= mjolnir
   ]
 
