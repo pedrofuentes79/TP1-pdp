@@ -1,3 +1,9 @@
+-- Integrantes
+-- Pedro Fuentes Urfeig
+-- Juan Manuel Zimmerman
+-- Sebastian Ignacio Andrés
+-- Vicente Tenconi
+
 import Test.HUnit
 {-- Tipos --}
 import Data.List
