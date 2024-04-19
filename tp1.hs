@@ -127,13 +127,13 @@ foldObjeto f1 f2 f3 obj = case obj of
 posición_personaje :: Personaje -> Posición
 posición_personaje = foldPersonaje (\pos _ -> pos)
                                     (\pers direccion -> siguiente_posición pers direccion) 
-                                    (\pers -> posición (Left pers))
+                                    (\pers -> pers)
 
 -- f1 es id porque, si es Objeto, quiero que me devuelva el nombre actual
 nombre_objeto :: Objeto -> String
 nombre_objeto = foldObjeto (\_ str -> str)
-                           (\obj _ -> nombre (Right obj))  -- caso objeto tomado
-                          (\obj -> nombre (Right obj))      --caso objeto destruido
+                           (\obj _ -> obj)  -- caso objeto tomado
+                          (\obj -> obj)      --caso objeto destruido
 
 -- {-Ejercicio 3-}
 
@@ -291,7 +291,7 @@ testsFoldPersonaje = [
 
 -- Test cases for foldObjeto
 testsFoldObjeto = [
-  "foldObjeto test1" ~: foldObjeto (\p s -> (0, 0)) (\r p -> posición_personaje p) (\r -> (1, 1)) mjolnir ~?= (2, 2),
+  "foldObjeto test1" ~: foldObjeto (\p s -> p) (\r p -> posición_personaje p) (\r -> r) mjolnir ~?= (2, 2),
   "foldObjeto test2" ~: foldObjeto (\p s -> s) (\r p -> nombre_personaje p) (\r -> "Objeto destruido") mjolnir ~?= "Mjolnir",
   "foldObjeto test3" ~: foldObjeto (\p s -> p) (\r p -> r) (\r -> r) (Tomado mjolnir thor) ~?= (2,2)
   ]
@@ -318,7 +318,7 @@ testNombrePersonaje = [
 
 -- Test cases for personajes_en
 testsPersonajesEn = [
-  "personajes_en test1" ~: personajes_en (universo_con [thanos,thor,wanda] [mjolnir, gemaAlma]) ~?= [thor, thanos, wanda],
+  "personajes_en test1" ~: personajes_en (universo_con [thanos,thor,wanda] [mjolnir, gemaAlma]) ~?= [thanos, thor, wanda],
   "personajes_en test2" ~: personajes_en (universo_con [] [gemaAlma, gemaRealidad]) ~?= []
   ]
 
@@ -331,7 +331,7 @@ testsObjetosEn = [
 
 -- Test cases for objetos_en_posesión_de
 testsObjetosEnPosesiónDe = [
-  "objetos_en_posesión_de test1" ~: objetos_en_posesión_de thor [Right(Tomado mjolnir thor), Right (Tomado stormbreaker thor)] ~?= [mjolnir, stormbreaker],
+  "objetos_en_posesión_de test1" ~: objetos_en_posesión_de thor [Right(Tomado mjolnir thor), Right (Tomado stormbreaker thor)] ~?= [Tomado mjolnir thor, Tomado stormbreaker thor],
   "objetos_en_posesión_de test2" ~: objetos_en_posesión_de thor [Right mjolnir, Right mjolnir, Right stormbreaker] ~?= []
   ]
 
