@@ -151,6 +151,8 @@ objetos_en = foldr (\x rec -> if es_un_objeto x then objeto_de x : rec else rec)
 Demostracion
 ∀ u :: Universo. ∀ o :: Objeto. elem o (objetos_en u) ⇒ elem (Right o) u
 
+Vamos a usar induccion estructural sobre la lista de objetos en el universo u.
+
 Caso base:
   Como estamos recorriendo una lista, el unico constructor base es u=[].
   Tenemos que ver que vale P([])...
@@ -299,7 +301,8 @@ testsFoldPersonaje = [
 testsFoldObjeto = [
   "foldObjeto test1" ~: foldObjeto (\p s -> p) (\r p -> posición_personaje p) (\r -> r) mjolnir ~?= (2, 2),
   "foldObjeto test2" ~: foldObjeto (\p s -> s) (\r p -> nombre_personaje p) (\r -> "Objeto destruido") mjolnir ~?= "Mjolnir",
-  "foldObjeto test3" ~: foldObjeto (\p s -> p) (\r p -> r) (\r -> r) (Tomado mjolnir thor) ~?= (2,2)
+  "foldObjeto test3" ~: foldObjeto (\p s -> p) (\r p -> r) (\r -> r) (Tomado mjolnir thor) ~?= (2,2),
+  "foldObjeto test4" ~: foldObjeto (\p s -> s) (\r p -> r) (\r -> r ++ " Destruido") (EsDestruido mjolnir) ~?= "Mjolnir Destruido" 
   ]
 
 -- Test cases for posición_personaje
@@ -328,11 +331,11 @@ testsPersonajesEn = [
   "personajes_en test2" ~: personajes_en (universo_con [] [gemaAlma, gemaRealidad]) ~?= []
   ]
 
-
 -- Test cases for objetos_en
 testsObjetosEn = [
   "objetos_en test1" ~: objetos_en [Right mjolnir, Left thor] ~?= [mjolnir],
-  "objetos_en test2" ~: objetos_en [Left thor, Right mjolnir, Left thor, Right stormbreaker] ~?= [mjolnir, stormbreaker]
+  "objetos_en test2" ~: objetos_en [Left thor, Right mjolnir, Left thor, Right stormbreaker] ~?= [mjolnir, stormbreaker],
+  "objetos_en test3" ~: objetos_en [Left thor, Left vision] ~?= []
   ]
 
 -- Test cases for objetos_en_posesión_de
